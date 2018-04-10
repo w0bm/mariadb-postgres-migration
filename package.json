@@ -1,0 +1,27 @@
+{
+  "name": "mariadb-postgres-migration",
+  "version": "1.0.0",
+  "description": "Migrates the database from w0bm v1 (mariadb) to v2 (postgres)",
+  "scripts": {
+    "start": "node --experimental-modules main.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/w0bm/mariadb-postgres-migration.git"
+  },
+  "keywords": [
+    "w0bm",
+    "migration"
+  ],
+  "author": "jkhsjdhjs",
+  "license": "UNLICENSED",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/w0bm/mariadb-postgres-migration/issues"
+  },
+  "homepage": "https://github.com/w0bm/mariadb-postgres-migration#readme",
+  "dependencies": {
+    "pg-promise": "^8.2.3",
+    "promise-mysql": "^3.2.1"
+  }
+}
