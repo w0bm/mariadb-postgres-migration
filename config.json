@@ -1,0 +1,15 @@
+{
+    "mysql": {
+        "port": "/run/mysqld/mysqld.sock",
+        "user": "w0bm",
+        "password": "",
+        "database": "w0bm"
+    },
+    "postgres": {
+        "host": "localhost",
+        "user": "w0bm",
+        "password": "",
+        "database": "w0bm"
+    },
+    "password_placeholder": "not set yet"
+}
