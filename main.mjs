@@ -9,25 +9,24 @@ const mydb = my.createPool(cfg.mysql);
 //function for printing an objects (mainly errors) in a readable way
 const pretty_print = obj => console.log(JSON.stringify(obj, null, 2));
 
+//prints "inserting <table>..." for multiple tables
+const insert_msg = arr => console.log(arr.map(t => "inserting " + t + "...").join("\n"));
+
+
 //helper function to avoid redundant code
-const set_auto_increment_and_cluster = (promise, table) => promise.then(result => new Promise((resolve, reject) => {
+const set_auto_increment_and_cluster = (promise, table) => promise.then(result => {
     console.log(result.length + " " + table + " inserted, adjusting auto increment value...");
     //set auto increment because ids may be missing in between in origin table
-    pgdb.any("SELECT id FROM " + table + " ORDER BY id DESC LIMIT 1")
+    return pgdb.any("SELECT id FROM " + table + " ORDER BY id DESC LIMIT 1")
         .then(row => pgdb.none("ALTER SEQUENCE " + table + "_id_seq RESTART WITH " + (parseInt(row[0].id) + 1))
             .then(() => {
                 console.log("adjusted auto increment for " + table + " table, clustering table...");
                 //cluster table because items are added asynchronously and thus are not in order
-                pgdb.none("CLUSTER " + table + " USING " + table + "_pkey")
-                    .then(() => {
-                        console.log("successfully clustered " + table + " table");
-                        resolve();
-                    }).catch(reject);
-            }).catch(reject)
-        ).catch(reject);
-}));
-
-const insert_msg = arr => console.log(arr.map(t => "inserting " + t + "...").join("\n"));
+                return pgdb.none("CLUSTER " + table + " USING " + table + "_pkey")
+                    .then(() => console.log("successfully clustered " + table + " table"))
+            })
+        );
+});
 
 //copy users
 insert_msg(["users"]);
