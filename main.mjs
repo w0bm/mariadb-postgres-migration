@@ -27,7 +27,7 @@ const set_auto_increment_and_cluster = (promise, table) => promise.then(result =
         ).catch(reject);
 }));
 
-console.log(["users", "videos"].map(t => "inserting " + t + "...").join("\n"));
+console.log(["users", "videos", "comments"].map(t => "inserting " + t + "...").join("\n"));
 Promise.all([
 
     //copy users
