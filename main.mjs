@@ -36,7 +36,11 @@ Promise.all([
 
     //copy videos
     set_auto_increment_and_cluster(mydb.query("SELECT * FROM videos")
-        .then(rows => Promise.all(rows.map(r => pgdb.none("INSERT INTO videos(id, file, created_at, updated_at, deleted_at, hash) VALUES($1, $2, $3, $4, $5, $6)", [r.id, r.file, r.created_at, r.updated_at, r.deleted_at, r.hash])))), "videos")
+        .then(rows => Promise.all(rows.map(r => pgdb.none("INSERT INTO videos(id, file, created_at, updated_at, deleted_at, hash) VALUES($1, $2, $3, $4, $5, $6)", [r.id, r.file, r.created_at, r.updated_at, r.deleted_at, r.hash])))), "videos"),
+
+    //copy comments
+    set_auto_increment_and_cluster(mydb.query("SELECT * FROM comments")
+        .then(rows => Promise.all(rows.map(r => pgdb.none("INSERT INTO comments(id, user_id, video_id, content, created_at, updated_at, deleted_at) VALUES($1, $2, $3, $4, $5, $6, $7)", [r.id, r.user_id, r.video_id, r.content, r.created_at, r.updated_at, r.deleted_at])))), "comments")
 
 ])
 .catch(pretty_print) // error handling
