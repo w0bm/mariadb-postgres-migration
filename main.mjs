@@ -37,10 +37,16 @@ const set_auto_increment_and_cluster = (promise, table) => promise.then(result =
     //set auto increment because ids may be missing in between in origin table
     return pgdb.any("SELECT id FROM " + table + " ORDER BY id DESC LIMIT 1")
         .then(row => pgdb.none("ALTER SEQUENCE " + table + "_id_seq RESTART WITH " + (parseInt(row[0].id) + 1))
-            .then(() => console.log("adjusted auto increment for " + table + " table"))
+            .then(() => {
+                console.log("adjusted auto increment for " + table + " table, clustering table");
+                //cluster tables because items are added asynchronously and thus are not in order
+                return pgdb.none("CLUSTER " + table + " USING " + table + "_pkey")
+                    .then(() => console.log("successfully clustered " + table + " table"));
+            })
         );
 });
 
+console.time("done! elapsed time");
 //copy users
 insert_msg(["users"]);
 set_auto_increment_and_cluster(mydb.query("SELECT * FROM users").then(rows => Promise.all(rows.map(r => pgdb.none(insert_users, map_user(r))))), "users")
@@ -65,10 +71,10 @@ set_auto_increment_and_cluster(mydb.query("SELECT * FROM users").then(rows => Pr
                 ]))
         ]);
     })
-    //cluster all tables because items are added asynchronously and thus are not in order
-    .then(() => Promise.all(["users", "videos", "comments", "messages"].map(table => pgdb.none("CLUSTER " + table + " USING " + table + "_pkey").then(() => console.log("successfully clustered " + table + " table")))))
     .catch(pretty_print) // error handling
     .then(() => { // close connections
+        console.log("closing db connections...");
         mydb.end();
         pgdb.$pool.end();
+        console.timeEnd("done! elapsed time");
     });
