@@ -54,21 +54,17 @@ set_auto_increment_and_cluster(mydb.query("SELECT * FROM users").then(rows => Pr
     .then(() => {
         insert_msg(["videos", "messages"]);
         return Promise.all([
-            set_auto_increment_and_cluster(mydb.query("SELECT * FROM messages").then(rows => Promise.all(rows.map(r => pgdb.none(insert_msgs, map_msg(r))))), "messages"),
-            set_auto_increment_and_cluster(mydb.query(select_videos_tags).then(rows => Promise.all(rows.map(r => pgdb.none(insert_videos, map_video(r))))), "videos")
-                .then(() => Promise.all([
-                    //copy comments
-                    (() => {
-                        insert_msg(["comments"]);
-                        return set_auto_increment_and_cluster(mydb.query("SELECT * FROM comments").then(rows => Promise.all(rows.map(r => pgdb.none(insert_comments, map_comment(r))))), "comments");
-                    })(),
-                    //tag videos
-                    (() => {
-                        insert_msg(["tags"]);
-                        return pgdb.any("SELECT DISTINCT UNNEST(tags) FROM videos")
-                            .then(rows => Promise.all(rows.map(r => pgdb.none(insert_tags, [r.unnest, r.unnest]).catch(pretty_print))).then(result => console.log(result.length + " tags inserted")));
-                    })()
-                ]))
+            set_auto_increment_and_cluster(mydb.query("SELECT * FROM messages").then(rows => Promise.all(rows.map(r => pgdb.none(insert_msgs, map_msg(r))))), "messages")
+          , set_auto_increment_and_cluster(mydb.query(select_videos_tags).then(rows => Promise.all(rows.map(r => pgdb.none(insert_videos, map_video(r))))), "videos")
+                .then(() => {
+                    //copy comments and tags
+                    insert_msg(["comments", "tags"]);
+                    return Promise.all([
+                        set_auto_increment_and_cluster(mydb.query("SELECT * FROM comments").then(rows => Promise.all(rows.map(r => pgdb.none(insert_comments, map_comment(r))))), "comments"),
+                        pgdb.any("SELECT DISTINCT UNNEST(tags) FROM videos")
+                            .then(rows => Promise.all(rows.map(r => pgdb.none(insert_tags, [r.unnest, r.unnest]).catch(pretty_print))).then(result => console.log(result.length + " tags inserted")))
+                    ]);
+                })
         ]);
     })
     .catch(pretty_print) // error handling
