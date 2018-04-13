@@ -32,7 +32,7 @@ const map_video = r => [r.id, r.file, r.created_at, r.updated_at, r.deleted_at, 
 const map_comment = r => [r.id, r.user_id, r.video_id, r.content, r.created_at, r.updated_at, r.deleted_at];
 
 //helper function to avoid redundant code
-const set_auto_increment_and_cluster = (promise, table) => promise.then(result => {
+const set_auto_increment = (promise, table) => promise.then(result => {
     console.log(result.length + " " + table + " inserted, adjusting auto increment value...");
     //set auto increment because ids may be missing in between in origin table
     return pgdb.any("SELECT id FROM " + table + " ORDER BY id DESC LIMIT 1")
@@ -43,18 +43,18 @@ const set_auto_increment_and_cluster = (promise, table) => promise.then(result =
 
 //copy users
 insert_msg(["users"]);
-set_auto_increment_and_cluster(mydb.query("SELECT * FROM users").then(rows => Promise.all(rows.map(r => pgdb.none(insert_users, map_user(r))))), "users")
+set_auto_increment(mydb.query("SELECT * FROM users").then(rows => Promise.all(rows.map(r => pgdb.none(insert_users, map_user(r))))), "users")
     //copy videos and messages
     .then(() => {
         insert_msg(["videos", "messages"]);
         return Promise.all([
-            set_auto_increment_and_cluster(mydb.query("SELECT * FROM messages").then(rows => Promise.all(rows.map(r => pgdb.none(insert_msgs, map_msg(r))))), "messages"),
-            set_auto_increment_and_cluster(mydb.query(select_videos_tags).then(rows => Promise.all(rows.map(r => pgdb.none(insert_videos, map_video(r))))), "videos")
+            set_auto_increment(mydb.query("SELECT * FROM messages").then(rows => Promise.all(rows.map(r => pgdb.none(insert_msgs, map_msg(r))))), "messages"),
+            set_auto_increment(mydb.query(select_videos_tags).then(rows => Promise.all(rows.map(r => pgdb.none(insert_videos, map_video(r))))), "videos")
                 .then(() => Promise.all([
                     //copy comments
                     (() => {
                         insert_msg(["comments"]);
-                        return set_auto_increment_and_cluster(mydb.query("SELECT * FROM comments").then(rows => Promise.all(rows.map(r => pgdb.none(insert_comments, map_comment(r))))), "comments");
+                        return set_auto_increment(mydb.query("SELECT * FROM comments").then(rows => Promise.all(rows.map(r => pgdb.none(insert_comments, map_comment(r))))), "comments");
                     })(),
                     //tag videos
                     (() => {
