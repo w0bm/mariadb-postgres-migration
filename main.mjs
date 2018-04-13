@@ -64,9 +64,9 @@ set_auto_increment_and_cluster(mydb.query("SELECT * FROM users").then(rows => Pr
                     })(),
                     //tag videos
                     (() => {
-                        console.log("tagging videos...");
+                        insert_msg(["tags"]);
                         return pgdb.any("SELECT DISTINCT UNNEST(tags) FROM videos")
-                            .then(rows => Promise.all(rows.map(r => pgdb.none(insert_tags, [r.unnest, r.unnest]).catch(pretty_print))).then(() => console.log("all videos tagged")));
+                            .then(rows => Promise.all(rows.map(r => pgdb.none(insert_tags, [r.unnest, r.unnest]).catch(pretty_print))).then(result => console.log(result.length + " tags inserted")));
                     })()
                 ]))
         ]);
