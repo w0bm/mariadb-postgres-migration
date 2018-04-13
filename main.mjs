@@ -14,9 +14,9 @@ const insert_msg = arr => console.log(arr.map(t => "inserting " + t + "...").joi
 
 //select videos with their tags
 const select_videos_tags = `SELECT v.*, GROUP_CONCAT(DISTINCT t.normalized) as tags
-                                 FROM videos v, taggable_taggables tt, taggable_tags t
-                                 WHERE v.id = tt.taggable_id AND tt.tag_id = t.tag_id
-                                 GROUP BY v.id`
+                            FROM videos v, taggable_taggables tt, taggable_tags t
+                            WHERE v.id = tt.taggable_id AND tt.tag_id = t.tag_id
+                            GROUP BY v.id`
 
 //insert queries for shortening insert functions
 const insert_users = "INSERT INTO users(id, username, password, created_at, updated_at, deleted_at, banned, banreason, filters) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)";
