@@ -7,8 +7,8 @@ const pgdb = (new pg())(cfg.postgres)
     , mydb = my.createPool(cfg.mysql);
 
 //select helpers
-const select_full = table => "SELECT * FROM " + table;
-const select_videos_tags = `SELECT v.*, GROUP_CONCAT(DISTINCT t.normalized) as tags
+const select_full = table => "SELECT * FROM " + table
+    , select_videos_tags = `SELECT v.*, GROUP_CONCAT(DISTINCT t.normalized) as tags
                             FROM videos v, taggable_taggables tt, taggable_tags t
                             WHERE v.id = tt.taggable_id AND tt.tag_id = t.tag_id
                             GROUP BY v.id`;
