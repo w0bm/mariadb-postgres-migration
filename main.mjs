@@ -103,20 +103,18 @@ copy_table(select_full("users"), insert_users, map_user)
     })
     //set auto increment because ids may be missing in between in origin table
     .then(() => Promise.all(["comments", "messages", "users", "videos"]
-        .map(table => {
-            return pgdb.any("SELECT id FROM " + table + " ORDER BY id DESC LIMIT 1")
+            .map(table => pgdb.any("SELECT id FROM " + table + " ORDER BY id DESC LIMIT 1")
                 .then(row => pgdb.none("ALTER SEQUENCE " + table + "_id_seq RESTART WITH " + (parseInt(row[0].id) + 1))
                     .then(() => console.log("adjusted auto increment for " + table + " table"))
-                );
-        })
+                )
+            )
     ))
     //cluster all tables because items are added asynchronously and thus are not in order
     .then(() => Promise.all(["comments", "messages", "playlist_video", "playlists", "users", "videos"]
             .map(table => pgdb.none("CLUSTER " + table + " USING " + table + "_pkey")
                 .then(() => console.log("clustered " + table + " table"))
             )
-        )
-    )
+    ))
     .catch(console.log) // error handling
     .then(() => { // close connections
         console.log("closing db connections...");
