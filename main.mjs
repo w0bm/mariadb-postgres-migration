@@ -1,6 +1,6 @@
 import my from "promise-mysql";
 import pg from "pg-promise";
-import { default as cfg } from "./config.json";
+import cfg from "./config.json";
 import normalize_tags from "./normalize_tags";
 
 //create db connections
