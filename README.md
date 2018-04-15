@@ -1,6 +1,10 @@
 # mariadb-postgres-migration
 Migrates the database from w0bm v1 (mariadb) to v2 (postgres)
 
+## Dependencies
+* [npm](https://github.com/npm/npm) & [nodejs](https://github.com/nodejs/node)
+* [rust](https://github.com/rust-lang/rust) (install [rustup](https://github.com/rust-lang-nursery/rustup.rs) and run `rustup default nightly`)
+
 ## Usage
 1. `git clone --rescurse-submodules git://github.com/w0bm/mariadb-postgres-migration.git`
 2. In `config.json`
