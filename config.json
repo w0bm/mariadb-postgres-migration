@@ -11,5 +11,6 @@
         "password": "",
         "database": "w0bm"
     },
-    "password_placeholder": "not set yet"
+    "password_placeholder": "not set yet",
+    "tag_select_separator": ",,,"
 }

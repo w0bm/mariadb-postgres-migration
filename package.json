@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Migrates the database from w0bm v1 (mariadb) to v2 (postgres)",
   "scripts": {
-    "start": "node --experimental-modules main.mjs"
+    "start": "cargo build --release --manifest-path=normalize/Cargo.toml && node --experimental-modules main.mjs"
   },
   "repository": {
     "type": "git",

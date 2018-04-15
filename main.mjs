@@ -1,6 +1,7 @@
 import my from "promise-mysql";
 import pg from "pg-promise";
 import { default as cfg } from "./config.json";
+import normalize_tags from "./normalize_tags";
 
 //create db connections
 const pgdb = (new pg())(cfg.postgres)
@@ -8,7 +9,7 @@ const pgdb = (new pg())(cfg.postgres)
 
 //select helpers
 const select_full = table => "SELECT * FROM " + table
-    , select_videos_tags = `SELECT v.*, GROUP_CONCAT(DISTINCT t.normalized) as tags
+    , select_videos_tags = `SELECT v.*, GROUP_CONCAT(DISTINCT t.name SEPARATOR '${cfg.tag_select_separator}') as tags
                             FROM videos v, taggable_taggables tt, taggable_tags t
                             WHERE v.id = tt.taggable_id AND tt.tag_id = t.tag_id
                             GROUP BY v.id`;
@@ -18,15 +19,15 @@ const insert_users = "INSERT INTO users(id, username, password, created_at, upda
     , insert_msgs = "INSERT INTO messages(id, from_user, to_user, title, content, created_at, updated_at, deleted_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8)"
     , insert_videos = "INSERT INTO videos(id, file, created_at, updated_at, deleted_at, hash, tags) VALUES($1, $2, $3, $4, $5, $6, $7)"
     , insert_comments = "INSERT INTO comments(id, user_id, video_id, content, created_at, updated_at, deleted_at) VALUES($1, $2, $3, $4, $5, $6, $7)"
-    , insert_tags = "INSERT INTO tags(normalized, tag) VALUES($1, $2)"
+    , insert_tags = "INSERT INTO tags(normalized, tag) VALUES($1, $2) ON CONFLICT DO NOTHING"
     , insert_playlists = "INSERT INTO playlist_video(playlist_id, video_id, created_at) VALUES($1, $2, $3)";
 
 //maps to shorten insertions
 const map_user = r => [r.id, r.username, cfg.password_placeholder, r.created_at, r.updated_at, null, r.banend, r.banreason, JSON.parse(r.categories)]
     , map_msg = r => [r.id, r.from, r.to, r.subject, r.content, r.created_at, r.updated_at, r.deleted_at]
-    , map_video = r => [r.id, r.file, r.created_at, r.updated_at, r.deleted_at, r.hash, r.tags.split(",").map(t => t.substring(0, 30))]
+    , map_video = (r, tags) => [r.id, r.file, r.created_at, r.updated_at, r.deleted_at, r.hash, tags.map(t => t.substring(0, 30))]
     , map_comment = r => [r.id, r.user_id, r.video_id, r.content, r.created_at, r.updated_at, r.deleted_at]
-    , map_tags = r => [r.unnest, r.unnest];
+    , map_tag = (norm, name) => [norm.substring(0, 30), name.substring(0, 30)];
 
 //prints "inserting <table>..."
 const log_insert_start = arr => console.log(arr.map(t => "inserting " + t + "...").join("\n"));
@@ -43,26 +44,41 @@ console.time("done! elapsed time");
 log_insert_start(["users"]);
 copy_table(select_full("users"), insert_users, map_user)
     .then(res => log_insert_done(res, "users"))
-    //copy videos and messages
+    //copy videos, messages and tags
     .then(() => {
-        log_insert_start(["videos", "messages"]);
+        log_insert_start(["messages", "videos", "tags"]);
         return Promise.all([
             copy_table(select_full("messages"), insert_msgs, map_msg)
                 .then(res => log_insert_done(res, "messages")),
-            copy_table(select_videos_tags, insert_videos, map_video)
-                .then(res => log_insert_done(res, "videos"))
+            mydb.query(select_videos_tags)
+                .then(videos => {
+                    let tags = videos.map(v => v.tags.split(cfg.tag_select_separator))
+                        .reduce((current, next) => current.concat(next));
+                    return normalize_tags(tags)
+                        .then(normalized => Promise.all([
+                            Promise.all(normalized.map((norm, i) => pgdb.none(insert_tags, map_tag(norm, tags[i]))))
+                                .then(res => log_insert_done(res, "tags")),
+                            (() => {
+                                let tag_start = 0,
+                                    tag_map = [];
+                                videos.forEach(v => {
+                                    tag_map[v.id] = tag_start;
+                                    tag_start += v.tags.split(cfg.tag_select_separator).length;
+                                });
+                                return Promise.all(videos.map(v => pgdb.none(insert_videos,
+                                        map_video(v, normalized.slice().splice(tag_map[v.id],
+                                            v.tags.split(cfg.tag_select_separator).length))
+                                    )))
+                                    .then(res => log_insert_done(res, "videos"));
+                            })()
+                        ]));
+                })
         ])
+        //copy comments
         .then(() => {
-            //copy comments and tags
-            log_insert_start(["comments", "tags"]);
-            return Promise.all([
-                copy_table(select_full("comments"), insert_comments, map_comment)
-                    .then(res => log_insert_done(res, "comments")),
-                pgdb.any("SELECT DISTINCT UNNEST(tags) FROM videos")
-                    .then(rows => Promise.all(rows.map(r => pgdb.none(insert_tags, map_tags(r))))
-                        .then(res => log_insert_done(res, "tags"))
-                    )
-            ]);
+            log_insert_start(["comments"]);
+            return copy_table(select_full("comments"), insert_comments, map_comment)
+                .then(res => log_insert_done(res, "comments"));
         })
     })
     //fill playlists
@@ -77,9 +93,9 @@ copy_table(select_full("users"), insert_users, map_user)
                         return Promise.all(videos.map(v => pgdb.none(insert_playlists, insert_mapping(plMap, v))))
                             .then(res => log_insert_done(res, playlist_title.toLowerCase()));
                     })
-            });
-        const uploads_mapping = (m, v) => [m.get(v.user_id), v.id, v.created_at];
-        const favorites_mapping = (m, v) => [m.get(v.user_id), v.video_id, v.created_at];
+            }),
+            uploads_mapping = (m, v) => [m.get(v.user_id), v.id, v.created_at],
+            favorites_mapping = (m, v) => [m.get(v.user_id), v.video_id, v.created_at];
         return Promise.all([
             fill_playlists("SELECT id, user_id, created_at FROM videos", "Uploads", uploads_mapping),
             fill_playlists("SELECT user_id, video_id, created_at FROM favorites", "Favorites", favorites_mapping)
