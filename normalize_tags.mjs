@@ -1,15 +1,17 @@
 import cp from "child_process";
 
-export default tags => new Promise((resolve, reject) => {
-    let child = cp.exec("normalize/target/release/normalize", null, (err, stdout, stderr) => {
+export default (tags, bufferSize) => new Promise((resolve, reject) => {
+    let child = cp.exec("normalize/target/release/normalize", { maxBuffer: bufferSize }, (err, stdout, stderr) => {
         if(!err && !stderr.length) {
-            let normalized_tags = stdout.split("\n");
+            let normalized_tags = stdout.split("\n"),
+                map = new Map();
             normalized_tags.pop();
-            resolve(normalized_tags);
+            tags.forEach((t, i) => map.set(t, normalized_tags[i]));
+            resolve(map);
         }
         reject({
             err: err,
-            stdout: stdout,
+            stdout: stdout.substr(0, 100) + "...",
             stderr: stderr
         });
     });
