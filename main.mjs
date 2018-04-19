@@ -47,30 +47,24 @@ const copy_videos_and_tags = async () => {
     log.copy_done("videos", videos.length);
     log.copy_start("tags");
     return pgdb.none(pgh.insert(
-        [...tag_map].map(pair => Object.assign(
-            {},
-            {
+        [...tag_map].map(pair => {
+            return {
                 "tag": pair[0].substring(0, 30),
                 "normalized": pair[1].substring(0, 30)
             }
-        )),
+        }),
         column_sets.tags
     ) + " ON CONFLICT DO NOTHING")
         .then(() => log.copy_done("tags"));
 };
 
-const copy_comments = async () => {
-    log.copy_start("comments");
-    const comments = await mydb.query(queries.my.comments);
-    return pgdb.none(pgh.insert(comments, column_sets.comments))
-        .then(() => log.copy_done("comments", comments.length));
-};
-
-const copy_messages = async () => {
-    log.copy_start("messages");
-    const messages = await mydb.query(queries.my.messages);
-    return pgdb.none(pgh.insert(messages, column_sets.messages))
-        .then(() => log.copy_done("messages", messages.length));
+const copy_stuff = async mode => {
+    if(!["comments", "messages"].includes(mode))
+        return false;
+    log.copy_start(mode);
+    const tmp = await mydb.query(queries.my[mode]);
+    return pgdb.none(pgh.insert(tmp, column_sets[mode]))
+        .then(() => log.copy_done(mode, tmp.length));
 };
 
 //links uploads and favorites to their respective users
@@ -87,13 +81,13 @@ const fill_playlists = async () => {
         );
         const videos = await mydb.query(select_query);
         return pgdb.none(pgh.insert(
-            videos.map(v =>
-                Object.assign({}, {
+            videos.map(v => {
+                return {
                     playlist_id: user_playlist.get(v.user_id),
                     video_id: v.id || v.video_id,
                     created_at: v.created_at
-                })
-            ),
+                }
+            }),
             column_sets.playlist_video
         ))
     };
@@ -125,8 +119,8 @@ const cluster_tables = async tables => Promise.all(
         await copy_users();
         await copy_videos_and_tags();
         await Promise.all([
-            copy_comments(),
-            copy_messages(),
+            copy_stuff("comments"),
+            copy_stuff("messages"),
             fill_playlists()
         ]);
         await set_auto_increment([
