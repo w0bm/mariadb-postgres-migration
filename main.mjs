@@ -58,13 +58,17 @@ const copy_videos_and_tags = async () => {
         .then(() => log.copy_done("tags"));
 };
 
-const copy_stuff = async mode => {
-    if(!["comments", "messages"].includes(mode))
-        return false;
-    log.copy_start(mode);
-    const tmp = await mydb.query(queries.my[mode]);
-    return pgdb.none(pgh.insert(tmp, column_sets[mode]))
-        .then(() => log.copy_done(mode, tmp.length));
+const copy_table = async table => {
+    let allowed_tables = ["comments", "messages"];
+    if(!allowed_tables.includes(table))
+        throw new Error("can only copy "
+            + allowed_tables.splice(0, allowed_tables.length - 1).join(", ")
+            + " and " + allowed_tables[0]
+        );
+    log.copy_start(table);
+    const src_table = await mydb.query(queries.my[table]);
+    return pgdb.none(pgh.insert(src_table, column_sets[table]))
+        .then(() => log.copy_done(table, src_table.length));
 };
 
 //links uploads and favorites to their respective users
@@ -119,8 +123,8 @@ const cluster_tables = async tables => Promise.all(
         await copy_users();
         await copy_videos_and_tags();
         await Promise.all([
-            copy_stuff("comments"),
-            copy_stuff("messages"),
+            copy_table("comments"),
+            copy_table("messages"),
             fill_playlists()
         ]);
         await set_auto_increment([
