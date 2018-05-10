@@ -2,6 +2,28 @@ import pg from "pg-promise";
 
 const pgh = new pg().helpers;
 
+const DEFAULT = () => ({
+    rawType: true,
+    toPostgres: () => "DEFAULT"
+});
+
+const ts_default_fallback = col => {
+    if(col.value === null)
+        return null;
+    const date = new Date(col.value);
+    if(isNaN(date.valueOf()))
+        return DEFAULT;
+    return col.value;
+};
+
+const catch_invalid = col =>
+    typeof col === "string" ? {
+        name: col,
+        init: ts_default_fallback
+    } : Object.assign(col, {
+        init: ts_default_fallback
+    });
+
 export default {
     users: new pgh.ColumnSet([
         "id",
@@ -10,10 +32,10 @@ export default {
         "created_at",
         "updated_at",
         "deleted_at",
-        {
+        catch_invalid({
             name: "banned",
             prop: "banend"
-        },
+        }),
         "banreason",
         {
             name: "filters",
@@ -69,6 +91,6 @@ export default {
     playlist_video: new pgh.ColumnSet([
         "playlist_id",
         "video_id",
-        "created_at"
+        catch_invalid("created_at")
     ], { table: "playlist_video" })
 };
