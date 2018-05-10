@@ -85,13 +85,11 @@ const fill_playlists = async () => {
         );
         const videos = await mydb.query(select_query);
         return pgdb.none(pgh.insert(
-            videos.map(v => {
-                return {
-                    playlist_id: user_playlist.get(v.user_id),
-                    video_id: v.id || v.video_id,
-                    created_at: v.created_at
-                }
-            }),
+            videos.map(v => ({
+                playlist_id: user_playlist.get(v.user_id),
+                video_id: v.id || v.video_id,
+                created_at: v.created_at
+            })),
             column_sets.playlist_video
         ))
     };
@@ -149,6 +147,6 @@ const cluster_tables = async tables => Promise.all(
     finally {
         console.log("closing db connections...");
         mydb.end();
-        pgdb.$pool.end();
+        pgp.end();
     }
 })();

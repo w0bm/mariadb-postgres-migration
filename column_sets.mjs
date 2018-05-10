@@ -4,31 +4,17 @@ const pgh = new pg().helpers;
 
 export default {
     users: new pgh.ColumnSet([
-        {
-            name: "id"
-        },
-        {
-            name: "username"
-        },
-        {
-            name: "password"
-        },
-        {
-            name: "created_at"
-        },
-        {
-            name: "updated_at"
-        },
-        {
-            name: "deleted_at"
-        },
+        "id",
+        "username",
+        "password",
+        "created_at",
+        "updated_at",
+        "deleted_at",
         {
             name: "banned",
             prop: "banend"
         },
-        {
-            name: "banreason"
-        },
+        "banreason",
         {
             name: "filters",
             prop: "categories"
@@ -36,66 +22,32 @@ export default {
     ], { table: "users" }),
 
     videos: new pgh.ColumnSet([
-        {
-            name: "id"
-        },
-        {
-            name: "file"
-        },
-        {
-            name: "created_at"
-        },
-        {
-            name: "updated_at"
-        },
-        {
-            name: "deleted_at"
-        },
-        {
-            name: "hash"
-        },
-        {
-            name: "tags"
-        }
+        "id",
+        "file",
+        "created_at",
+        "updated_at",
+        "deleted_at",
+        "hash",
+        "tags"
     ], { table: "videos" }),
 
     tags: new pgh.ColumnSet([
-        {
-            name: "normalized"
-        },
-        {
-            name: "tag"
-        }
+        "normalized",
+        "tag"
     ], { table: "tags" }),
 
     comments: new pgh.ColumnSet([
-        {
-            name: "id"
-        },
-        {
-            name: "user_id"
-        },
-        {
-            name: "video_id"
-        },
-        {
-            name: "content"
-        },
-        {
-            name: "created_at"
-        },
-        {
-            name: "updated_at"
-        },
-        {
-            name: "deleted_at"
-        }
+        "id",
+        "user_id",
+        "video_id",
+        "content",
+        "created_at",
+        "updated_at",
+        "deleted_at"
     ], { table: "comments" }),
 
     messages: new pgh.ColumnSet([
-        {
-            name: "id"
-        },
+        "id",
         {
             name: "from_user",
             prop: "from"
@@ -108,29 +60,15 @@ export default {
             name: "title",
             prop: "subject"
         },
-        {
-            name: "content"
-        },
-        {
-            name: "created_at"
-        },
-        {
-            name: "updated_at"
-        },
-        {
-            name: "deleted_at"
-        }
+        "content",
+        "created_at",
+        "updated_at",
+        "deleted_at"
     ], { table: "messages" }),
 
     playlist_video: new pgh.ColumnSet([
-        {
-            name: "playlist_id"
-        },
-        {
-            name: "video_id"
-        },
-        {
-            name: "created_at"
-        }
+        "playlist_id",
+        "video_id",
+        "created_at"
     ], { table: "playlist_video" })
 };
