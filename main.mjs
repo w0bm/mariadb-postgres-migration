@@ -76,7 +76,7 @@ const fill_playlists = async () => {
     log.copy_start("uploads into playlist_video");
     log.copy_start("favorites into playlist_video");
     const playlists = await pgdb.any(queries.pg.playlists);
-    const fill_playlists = async (select_query, playlist_title) => {
+    const fill_userplaylists_by_title = async (select_query, playlist_title) => {
         const user_playlist = new Map(playlists
             .filter(pl => pl.title === playlist_title)
             .map(pl => [pl.user_id, pl.id]
@@ -96,9 +96,9 @@ const fill_playlists = async () => {
         ))
     };
     return Promise.all([
-        fill_playlists(queries.my.favorites, "Favorites")
+        fill_userplaylists_by_title(queries.my.favorites, "Favorites")
             .then(() => log.copy_done("favorites")),
-        fill_playlists(queries.my.uploads, "Uploads")
+        fill_userplaylists_by_title(queries.my.uploads, "Uploads")
             .then(() => log.copy_done("uploads"))
     ]);
 };
