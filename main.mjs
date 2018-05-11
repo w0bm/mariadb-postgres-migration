@@ -73,7 +73,7 @@ const copy_comments = async () => {
                 if(deleted_at
                     && new Date(c.created_at).valueOf() > new Date(deleted_at).valueOf())
                     deleted_offset++;
-                else if(i === match.length)
+                else if(i === match.length + deleted_offset)
                     comments[index].response_to = comments[index - i].id;
             }
         }
