@@ -65,7 +65,13 @@ export default {
         "content",
         "created_at",
         "updated_at",
-        "deleted_at"
+        "deleted_at",
+        {
+            name: "response_to",
+            init: col => col.value
+                ? col.value
+                : DEFAULT
+        }
     ], { table: "comments" }),
 
     messages: new pgh.ColumnSet([

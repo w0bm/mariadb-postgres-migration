@@ -33,7 +33,7 @@ const copy_videos_and_tags = async () => {
     let videos = await mydb.query(queries.my.videos_with_tags, cfg.tag_select_separator);
     console.log("normalizing tags...");
     const tag_map = await normalize_tags(
-        videos.map(v =>v.tags.split(cfg.tag_select_separator))
+        videos.map(v => v.tags.split(cfg.tag_select_separator))
             .reduce((cur, nxt) => cur.concat(nxt)),
         cfg.tag_normalize_buffer
     );
@@ -58,17 +58,35 @@ const copy_videos_and_tags = async () => {
         .then(() => log.copy_done("tags"));
 };
 
-const copy_table = async table => {
-    let allowed_tables = ["comments", "messages"];
-    if(!allowed_tables.includes(table))
-        throw new Error("can only copy "
-            + allowed_tables.splice(0, allowed_tables.length - 1).join(", ")
-            + " and " + allowed_tables[0]
-        );
-    log.copy_start(table);
-    const src_table = await mydb.query(queries.my[table]);
-    return pgdb.none(pgh.insert(src_table, column_sets[table]))
-        .then(() => log.copy_done(table, src_table.length));
+const copy_comments = async () => {
+    log.copy_start("comments");
+    const comments = await mydb.query(queries.my.comments),
+          response_regex = new RegExp(/^\^+/);
+    let match, deleted_at;
+    comments.forEach((c, index) => {
+        if((match = response_regex.exec(c.content)) && (match = match[0])) {
+            let deleted_offset = 0;
+            for(let i = 1; i <= match.length + deleted_offset; i++) {
+                if(index - i < 0 || comments[index - i].video_id !== c.video_id)
+                    break;
+                deleted_at = comments[index - i].deleted_at;
+                if(deleted_at
+                    && new Date(c.created_at).valueOf() > new Date(deleted_at).valueOf())
+                    deleted_offset++;
+                else if(i === match.length)
+                    comments[index].response_to = comments[index - i].id;
+            }
+        }
+    });
+    return pgdb.none(pgh.insert(comments, column_sets.comments))
+        .then(() => log.copy_done("comments", comments.length));
+};
+
+const copy_messages = async () => {
+    log.copy_start("messages");
+    const messages = await mydb.query(queries.my.messages);
+    return pgdb.none(pgh.insert(messages, column_sets.messages))
+        .then(() => log.copy_done("messages", messages.length));
 };
 
 //links uploads and favorites to their respective users
@@ -121,8 +139,8 @@ const cluster_tables = async tables => Promise.all(
         await copy_users();
         await copy_videos_and_tags();
         await Promise.all([
-            copy_table("comments"),
-            copy_table("messages"),
+            copy_comments(),
+            copy_messages(),
             fill_playlists()
         ]);
         await set_auto_increment([

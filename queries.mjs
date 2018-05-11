@@ -1,6 +1,6 @@
 export default {
     my: {
-        comments: "SELECT * FROM comments",
+        comments: "SELECT * FROM comments ORDER BY video_id, id ASC",
         messages: "SELECT * FROM messages",
         users: "SELECT * FROM users",
         favorites: "SELECT user_id, video_id, created_at FROM favorites",
