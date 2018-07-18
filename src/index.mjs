@@ -1,6 +1,6 @@
 import my from "promise-mysql";
 import pg from "pg-promise";
-import cfg from "./config.json";
+import cfg from "../config.json";
 import normalize_tags from "./normalize_tags";
 import column_sets from "./column_sets";
 import queries from "./queries";
