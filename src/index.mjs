@@ -47,12 +47,10 @@ const copy_videos_and_tags = async () => {
     log.copy_done("videos", videos.length);
     log.copy_start("tags");
     return pgdb.none(pgh.insert(
-        [...tag_map].map(pair => {
-            return {
-                "tag": pair[0].substring(0, 30),
-                "normalized": pair[1].substring(0, 30)
-            }
-        }),
+        [...tag_map].map(pair => ({
+            "tag": pair[0].substring(0, 30),
+            "normalized": pair[1].substring(0, 30)
+        })),
         column_sets.tags
     ) + " ON CONFLICT DO NOTHING")
         .then(() => log.copy_done("tags"));
