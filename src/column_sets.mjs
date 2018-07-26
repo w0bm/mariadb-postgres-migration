@@ -68,9 +68,7 @@ export default {
         "deleted_at",
         {
             name: "response_to",
-            init: col => col.value
-                ? col.value
-                : DEFAULT
+            init: col => col.value || DEFAULT
         }
     ], { table: "comments" }),
 
