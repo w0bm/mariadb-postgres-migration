@@ -8,7 +8,7 @@ import queries from "./queries";
 //create db connections
 const pgp = new pg()
     , pgh = pgp.helpers
-    , pgdb = (pgp)(cfg.postgres)
+    , pgdb = pgp(cfg.postgres)
     , mydb = my.createPool(cfg.mysql);
 
 //progress logging functions
