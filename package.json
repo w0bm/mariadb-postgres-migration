@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/w0bm/mariadb-postgres-migration#readme",
   "dependencies": {
-    "pg-promise": "^8.2.3",
-    "promise-mysql": "^3.2.1"
+    "pg-promise": "^8.4.5",
+    "promise-mysql": "^3.3.1"
   }
 }

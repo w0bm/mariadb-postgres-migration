@@ -2,10 +2,10 @@ import pg from "pg-promise";
 
 const pgh = new pg().helpers;
 
-const DEFAULT = () => ({
+const DEFAULT = {
     rawType: true,
     toPostgres: () => "DEFAULT"
-});
+};
 
 const ts_default_fallback = col => {
     if(col.value === null)
