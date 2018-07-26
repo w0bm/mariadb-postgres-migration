@@ -20,9 +20,7 @@ const catch_invalid = col =>
     typeof col === "string" ? {
         name: col,
         init: ts_default_fallback
-    } : Object.assign(col, {
-        init: ts_default_fallback
-    });
+    } : { ...col, ...{ init: ts_default_fallback }};
 
 export default {
     users: new pgh.ColumnSet([
