@@ -5,10 +5,10 @@ export default {
         users: "SELECT * FROM users",
         favorites: "SELECT user_id, video_id, created_at FROM favorites",
         uploads: "SELECT id, user_id, created_at FROM videos",
-        videos_with_tags: `SELECT v.*, GROUP_CONCAT(DISTINCT t.name SEPARATOR ?) as tags
-                           FROM videos v, taggable_taggables tt, taggable_tags t
-                           WHERE v.id = tt.taggable_id AND tt.tag_id = t.tag_id
-                           GROUP BY v.id`
+        videos_with_tags: "SELECT v.*, GROUP_CONCAT(DISTINCT t.name SEPARATOR ?) as tags "
+                        + "FROM videos v, taggable_taggables tt, taggable_tags t "
+                        + "WHERE v.id = tt.taggable_id AND tt.tag_id = t.tag_id "
+                        + "GROUP BY v.id"
     },
     pg: {
         playlists: "SELECT id, user_id, title FROM playlists",
