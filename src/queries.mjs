@@ -16,4 +16,4 @@ export default {
         set_auto_increment: (table, value) => "ALTER SEQUENCE " + table + "_id_seq RESTART WITH " + value,
         cluster_pkey: table => "CLUSTER " + table + " USING " + table + "_pkey"
     }
-}
+};
